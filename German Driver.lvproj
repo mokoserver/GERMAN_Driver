@@ -170,7 +170,7 @@
 				<Property Name="Bld_localDestDirType" Type="Str">relativeToProject</Property>
 				<Property Name="Bld_modifyLibraryFile" Type="Bool">true</Property>
 				<Property Name="Bld_previewCacheID" Type="Str">{25ADA903-AE7F-4D81-A937-3F30F1FD7F4A}</Property>
-				<Property Name="Bld_version.build" Type="Int">9</Property>
+				<Property Name="Bld_version.build" Type="Int">10</Property>
 				<Property Name="Bld_version.major" Type="Int">1</Property>
 				<Property Name="Destination[0].destName" Type="Str">MaynuoM9714.dll</Property>
 				<Property Name="Destination[0].path" Type="Path">../DriverCompiled_DLL/MaynuoM9714.dll</Property>
@@ -444,7 +444,7 @@
 				<Property Name="Bld_localDestDirType" Type="Str">relativeToProject</Property>
 				<Property Name="Bld_modifyLibraryFile" Type="Bool">true</Property>
 				<Property Name="Bld_previewCacheID" Type="Str">{DBCEFD9B-C416-478A-A52C-E2840523E0EE}</Property>
-				<Property Name="Bld_version.build" Type="Int">8</Property>
+				<Property Name="Bld_version.build" Type="Int">9</Property>
 				<Property Name="Bld_version.major" Type="Int">1</Property>
 				<Property Name="Destination[0].destName" Type="Str">HDM3065B_GERMAN.dll</Property>
 				<Property Name="Destination[0].path" Type="Path">../DriverCompiled_DLL/HDM3065B_GERMAN.dll</Property>
@@ -536,7 +536,7 @@
 				<Property Name="Bld_localDestDirType" Type="Str">relativeToProject</Property>
 				<Property Name="Bld_modifyLibraryFile" Type="Bool">true</Property>
 				<Property Name="Bld_previewCacheID" Type="Str">{9E3BB5FC-17CB-482D-A062-CC729ED99E45}</Property>
-				<Property Name="Bld_version.build" Type="Int">9</Property>
+				<Property Name="Bld_version.build" Type="Int">10</Property>
 				<Property Name="Bld_version.major" Type="Int">1</Property>
 				<Property Name="Destination[0].destName" Type="Str">DMM6500_04582450.dll</Property>
 				<Property Name="Destination[0].path" Type="Path">../DriverCompiled_DLL/DMM6500_04582450.dll</Property>
@@ -628,7 +628,7 @@
 				<Property Name="Bld_localDestDirType" Type="Str">relativeToProject</Property>
 				<Property Name="Bld_modifyLibraryFile" Type="Bool">true</Property>
 				<Property Name="Bld_previewCacheID" Type="Str">{3723FC1D-D8BD-4B0F-A924-2E622F3BD964}</Property>
-				<Property Name="Bld_version.build" Type="Int">10</Property>
+				<Property Name="Bld_version.build" Type="Int">11</Property>
 				<Property Name="Bld_version.major" Type="Int">1</Property>
 				<Property Name="Destination[0].destName" Type="Str">DMM6500_04625545.dll</Property>
 				<Property Name="Destination[0].path" Type="Path">../DriverCompiled_DLL/DMM6500_04625545.dll</Property>
@@ -720,7 +720,7 @@
 				<Property Name="Bld_localDestDirType" Type="Str">relativeToProject</Property>
 				<Property Name="Bld_modifyLibraryFile" Type="Bool">true</Property>
 				<Property Name="Bld_previewCacheID" Type="Str">{0431E33F-9B04-428D-AD33-E268D617706E}</Property>
-				<Property Name="Bld_version.build" Type="Int">10</Property>
+				<Property Name="Bld_version.build" Type="Int">11</Property>
 				<Property Name="Bld_version.major" Type="Int">1</Property>
 				<Property Name="Destination[0].destName" Type="Str">DMM6500.dll</Property>
 				<Property Name="Destination[0].path" Type="Path">../DriverCompiled_DLL/DMM6500.dll</Property>
