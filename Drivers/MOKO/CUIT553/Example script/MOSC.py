@@ -1,78 +1,182 @@
 '''
-        MOKO Server Control
-        This library contains functions for controlling MOKO SE functions, reports and utilities
-        Many of these functions are the legacy of MOKO's previous projects
-        First version from 26.02.2021
-        The library was renamed to MOSC.py 15.03.2021
+MOSC.py - MOKO Server Control
+=============================
 
-        The library depends on MOKO.py
+Эта библиотека содержит функции для управления функциями MOKO SE, отчетами и утилитами.
+Многие из этих функций являются наследием предыдущих проектов MOKO.
+
+Ключевые возможности:
+---------------------
+- Форматирование строк и заголовков для MOKO SE.
+- Управление состоянием выполнения скрипта (Done, Passed, Failed).
+- Работа с деревом (Hash) и проверкой его состояния.
+- Взаимодействие между отчетами и утилитами.
+- Создание табличных отчетов.
+- Декоратор для итерационной структуры тестов.
+- Расчет времени выполнения скрипта.
+
+Зависимости:
+-------------
+- MOKO.py
+
+История версий:
+---------------
+- 26.02.2021: Первая версия.
+- 15.03.2021: Библиотека переименована в MOSC.py.
+- 09.02.2022: Внесены изменения в логику работы.
+- 23.11.2022: Добавлены функции для работы с хэшами.
 '''
 
 import MOKO
-from time import sleep, monotonic
+import os
+import sys
+from datetime import datetime
 
-#####################################
-#                FORMATTING
-#####################################
+# region ### Formatting / Форматирование ###
 
 round_3 = '{:.' + str(3) + 'f}'
 
-def stars(word):
-    """Заполняет строку звездочками"""
-    formated_string = '{:*^60}'.format(word)
+# -- script_name --
+def script_name() -> str:
+    """
+    Возвращает имя исполняемого скрипта.
+
+    Returns:
+        str: Имя исполняемого скрипта.
+    """
+    scriptname = os.path.basename(sys.argv[0])
+    return scriptname
+
+# -- stars --
+def stars(word: str) -> str:
+    """
+    Заполняет строку звездочками с переданным словом посередине.
+
+    Args:
+        word (str): Слово для вставки.
+
+    Returns:
+        str: Отформатированная строка со звездочками (длиной до 15 символов).
+    """
+    formated_string = '{:*^15}'.format(word)
     return formated_string
 
+# -- center_50 --
+def center_50(message: str) -> str:
+    """
+    Заполняет строку звездочками с переданным сообщением посередине.
 
-def center_50(message):  # Align text with * filling
+    Args:
+        message (str): Сообщение для вставки.
+
+    Returns:
+        str: Отформатированная строка со звездочками (длиной до 50 символов).
+    """
     return ('{:*^50}'.format(message))
 
+# -- stage_header --
+def stage_header(test_name: str, GOST_point: str) -> None:
+    """
+    Заполняет поля заголовка этапа в MOKO SE.
 
-def Stage_Header(test_name, GOST_point):
+    Args:
+        test_name (str): Название измерений.
+        GOST_point (str): Точка ГОСТ.
+    """
     MOKO.Stage(center_50('*'))
     MOKO.Stage(center_50(' Measurements of ' + test_name + ' '))
     MOKO.Stage(center_50(' check point ' + GOST_point + ' '))
     MOKO.Stage(center_50('*'))
-    MOKO.Stage("")
-    return
+    MOKO.Stage(" ")
 
+# -- format_header --
+def format_header(header: str) -> str:
+    """
+    Вычисляет ширину колонки и возвращает строку заголовка для таблицы.
 
-def format_header(header):  # formats the headers in the report by length
+    Args:
+        header (str): Название колонки.
+
+    Returns:
+        str: Строка заголовка с вычисленной шириной.
+    """
     h = header.split('\\n')
     len_max = 0
     for i in h:
-        len(i)
         if len(i) > len_max:
             len_max = len(i)
     return header + '#' + str(len_max * 7.5) + ';'
 
-################################################
-#                SCRIPT CONTROLL AND STATE
-################################################
+# -- table_headers --
+def table_headers(table_data: list, table_headers: list) -> str:
+    """
+    Вычисляет ширину всех колонок и возвращает строку заголовков для таблицы.
 
-# Delay script execution time
-def Delay(minutes):
+    Args:
+        table_data (list): Данные таблицы MOKO SE.
+        table_headers (list): Заголовки таблицы MOKO SE.
+
+    Returns:
+        str: Строка заголовков для всех колонок с вычисленной шириной.
+    """
+    headers = ""
+    for i in range(len(table_data[0].split(","))):
+        max_len = len(table_headers[i])
+        column = [string.split(",")[i] for string in table_data]
+        for cell in column:
+            split_cell = cell.split("\n")
+            split_cell_lens = [len(item) for item in split_cell]
+            if max_len < max(split_cell_lens): max_len = max(split_cell_lens)
+
+        headers += f"{table_headers[i]}#{max_len * 7.5};"
+    return headers
+# endregion
+
+# region ### Script Control and State / Управление скриптом и состоянием ###
+
+# -- Delay --
+def Delay(minutes: int) -> None:
+    """
+    Задерживает выполнение скрипта на указанное количество минут.
+
+    Args:
+        minutes (int): Количество минут задержки.
+    """
     MOKO.Stage('Delay script execution time for ' + str(minutes) + ' minutes')
     MOKO.Messenger('set', 'Info', "Please, wait for " + str(minutes) + " minutes while taking a measurement", 'void',
                    str(minutes * 60))
-    return
 
-
-def Done():
+# -- Done --
+def Done() -> None:
+    """
+    Устанавливает в отчете ScriptState значение "Done".
+    """
     MOKO.Report('ScriptState', 'set', 'string', 'Done')
-    return
 
-
+# -- Passed --
 def Passed():
+    """
+    Устанавливает в отчете ScriptState значение "Passed".
+    """
     MOKO.Report('ScriptState', 'set', 'string', 'Passed')
-    return
 
-
+# -- Failed --
 def Failed():
+    """
+    Устанавливает в отчете ScriptState значение "Failed".
+    """
     MOKO.Report('ScriptState', 'set', 'string', 'Failed')
-    return
 
+# -- ScriptState --
+def ScriptState() -> None:
+    """
+    Получает значение ScriptState из MOKO SE и устанавливает результат выполнения скрипта.
 
-def ScriptState():
+    Возможные значения в MOKO SE:
+    - 'Done': Завершает скрипт со статусом 'done'.
+    - 'Passed': Завершает скрипт со статусом 'passed'.
+    - Любое другое (например, 'Failed'): Завершает скрипт со статусом 'failed'.
+    """
     state = MOKO.Report('ScriptState', 'get', 'string', 'string', 'string')
     if state == 'Done':
         MOKO.EndScript('done')
@@ -80,26 +184,88 @@ def ScriptState():
         MOKO.EndScript('passed')
     else:
         MOKO.EndScript('failed')
-    return
+# endregion
 
+# region ### Tree & Hash / Дерево и Хэши ###
 
-#####################################
-#                TREE & hash
-#####################################
+# -- hash_failed --
+def hash_failed() -> None:
+    """
+    Устанавливает хэш для прохождения с ошибкой.
+    """
+    MOKO.Program('tree', 'set', 'chosen=failed')
 
-def status_tree(hash):
+# -- hash_passed --
+def hash_passed() -> None:
+    """
+    Устанавливает хэш для прохождения без ошибок.
+    """
+    MOKO.Program('tree', 'set', 'chosen=passed')
+
+# -- status_tree --
+def status_tree(hash: str) -> bool:
+    """
+    Выбирает хэш дерева и проверяет его содержимое.
+
+    Args:
+        hash (str): Хэш для проверки.
+
+    Returns:
+        bool: True, если статус хэша не равен 'canceled', иначе False.
+    """
     MOKO.Program('tree', 'set', 'select = ' + hash)
     status = MOKO.Program('tree', 'get', 'hash ' + hash, 'string')
     if status != 'canceled':
         return True
     return False
 
+# -- get_hashes_status --
+def get_hashes_status(hash: str) -> str:
+    """
+    Возвращает статус указанного хэша.
 
-#####################################
-#                UTILITY CONTROL
-#####################################
+    Args:
+        hash (str): Хэш для проверки.
 
-def Report_Chek_Forcibly(report_name, utility, report_type='string'):
+    Returns:
+        str: Статус хэша.
+    """
+    status = MOKO.Program('tree', 'get', 'hash ' + hash, 'string')
+    return status
+
+# -- hashStatus --
+def hashStatus(hash: str) -> bool:
+    """
+    Выбирает хэш дерева и проверяет, является ли он пустым.
+
+    Args:
+        hash (str): Хэш для проверки.
+
+    Returns:
+        bool: True, если статус хэша 'empty', иначе False.
+    """
+    MOKO.Program('tree', 'set', 'select = ' + hash)
+    status = MOKO.Program('tree', 'get', 'hash ' + hash, 'string')
+    if status == 'empty':
+        return True
+    return False
+# endregion
+
+# region ### Utility Control / Управление утилитами ###
+
+# -- Report_Chek_Forcibly --
+def Report_Chek_Forcibly(report_name: str, utility: str, report_type: str = 'string') -> str:
+    """
+    Принудительно проверяет отчет и обновляет утилиту. Если данных нет, запрашивает у пользователя.
+
+    Args:
+        report_name (str): Имя отчета.
+        utility (str): Имя утилиты.
+        report_type (str, optional): Тип отчета. Defaults to 'string'.
+
+    Returns:
+        str: Значение отчета.
+    """
     NEM = 'And nothing else matters'
     Report = MOKO.Report(report_name, 'get', report_type, report_type, report_type)
     if Report.startswith(NEM):
@@ -110,16 +276,38 @@ def Report_Chek_Forcibly(report_name, utility, report_type='string'):
     MOKO.Utility(utility, 'set', report_name + ' ' + Report)
     return Report
 
+# -- Report_to_Utility --
+def Report_to_Utility(report_name: str, utility: str, report_type: str = 'string') -> str:
+    """
+    Передает данные из отчета в утилиту, если они не пустые.
 
-def Report_to_Utility(report_name, utility, report_type='string'):
+    Args:
+        report_name (str): Имя отчета.
+        utility (str): Имя утилиты.
+        report_type (str, optional): Тип отчета. Defaults to 'string'.
+
+    Returns:
+        str: Значение отчета.
+    """
     ECM = 'Empty case in memory'
     Report = MOKO.Report(report_name, 'get', report_type, report_type, report_type)
     if not Report.startswith(ECM):
         MOKO.Utility(utility, 'set', report_name + ' ' + Report)
     return Report
 
+# -- Utility_to_Report --
+def Utility_to_Report(report_names: list | str, utility: str, report_type: str = 'string') -> str:
+    """
+    Получает данные из утилиты и устанавливает их в отчет MOKO SE.
 
-def Utility_to_Report(report_names, utility, report_type='string'):
+    Args:
+        report_names (list | str): Имена для команд утилиты и отчетов.
+        utility (str): Имя утилиты.
+        report_type (str, optional): Тип отчета. Defaults to 'string'.
+
+    Returns:
+        str: Данные отчетов.
+    """
     if report_type == 'strings':
         reports_names = ''
         data_reports = ''
@@ -133,53 +321,114 @@ def Utility_to_Report(report_names, utility, report_type='string'):
         MOKO.Report(report_names, 'set', report_type, report)
         return report
     return data_reports
+# endregion
 
+# region ### Reports / Отчеты ###
 
-#####################################
-#                REPORTS
-#####################################
+# -- table_report --
+def table_report(report_name: str, result: list) -> None:
+    """
+    Создает табличный отчет из массива элементов.
 
-# Function getting array of elements and createing tabular report, elements of array set to string
-def table_report(reportName, result):
+    Args:
+        report_name (str): Имя отчета.
+        result (list): Данные таблицы.
+    """
     dataString = str('')
     for i in result:
         element = str(i)
         dataString += (element + ';')
     dataString = dataString[0:-1]
-    MOKO.Report(reportName, 'set', 'table', dataString)
-    return
+    MOKO.Report(report_name, 'set', 'table', dataString)
+# endregion
 
+# region ### Test iteration structure / Итерационная структура тестов ###
 
-#####################################
-#       Test iteration structure
-#####################################
+# -- iteration_structure --
+def iteration_structure(test_function, iterations: int = 3):
+    """
+    Декоратор для функций итерационных испытаний.
 
-# Test function should have standard input & output:
-# input -- [list of input parameters], hash
-# output -- [list of output parameters, where [0] element is a result of trial 'Good'/'Normal'/'Bad']
-def iteration_structure(test_function, iterations = 3): # Decorator of iteration function
-    def wrapper(input_paremeters, test_hash):   # Wrapper of the function
+    Args:
+        test_function: Функция испытания. Должна принимать (input_parameters, test_hash)
+                      и возвращать список, где [0] - результат ('Good'/'Normal'/'Bad').
+        iterations (int, optional): Количество итераций. Defaults to 3.
+    """
+    def wrapper(input_paremeters, test_hash):
         test_result = 0
-        if status_tree(test_hash):      # Checking up hash
-            test_iterator = 0           # Setting test iteration counter to 0
-            while test_iterator < iterations:    # While cycle for trial
-                # Here should be actual trial block, but in this example a user will choose trial's result
+        if status_tree(test_hash):
+            test_iterator = 0
+            while test_iterator < iterations:
                 test_result = test_function(input_paremeters, test_hash)
-                # This part sets up script's status after trial's result check, but you can use your local variable
                 if test_result[0] == 'Good':
                     Done()
                     test_iterator = iterations
                 elif test_result[0] == 'Normal':
                     Passed()
                     test_iterator = iterations
-                # Here comes the iteration part, if trial's result is unsatisfactory
                 elif test_result[0] == 'Bad':
                     Failed()
-                    test_iterator += 1  # Incrementing iteration counter
+                    test_iterator += 1
                     if test_iterator == iterations:
-                        # Asking the user for reiteration of the trial
                         reiteration = MOKO.Messenger('get', 'Test result is unsatisfactory', 'Would you like to restart?', 'boolean')
                         if reiteration:
                             test_iterator = 0
         return test_result
     return wrapper
+# endregion
+
+# region ### Utility Functions / Вспомогательные функции ###
+
+# -- formated_value --
+def formated_value(value: str, ndigits: int) -> str:
+    """
+    Форматирует входное значение в соответствии с количеством знаков после запятой.
+
+    Args:
+        value (str): Входное значение.
+        ndigits (int): Количество знаков после запятой.
+
+    Returns:
+        str: Отформатированное значение.
+    """
+    try:
+        value_format: float = round(float(value.replace(",", ".")), ndigits)
+        value_format: str = str(value_format).replace('.', ',')
+        value_ndigits: int = len(value_format.split(',')[-1])
+        if value_ndigits < ndigits:
+            value_format += (ndigits-value_ndigits)*'0'
+    except:
+        value_format: str = value
+    return value_format
+
+# -- InitScriptExecutionTime --
+def InitScriptExecutionTime() -> None:
+    """
+    Инициализирует таблицу со временем выполнения скрипта.
+    """
+    MOKO.Report("ScriptExecutionTime", "info", "table", "Название скрипта#350;"
+                                                        "Start time#100;"
+                                                        "Stop time#100;"
+                                                        "Время исполнения#150")
+
+# -- ScriptExecutionTime --
+def ScriptExecutionTime (StartTime: datetime) -> None:
+    """
+    Вычисляет время выполнения скрипта и записывает его в отчет.
+
+    Args:
+        StartTime (datetime): Время начала выполнения скрипта.
+    """
+    TimeOfCompletion: str = str(datetime.now() - StartTime)
+    ScriptName: str = os.path.basename(sys.argv[0])
+    StartTime = str(StartTime)
+    StopTime = str(datetime.now())
+    RepTimeOfCompletion: str = TimeOfCompletion[:TimeOfCompletion.find(".")]
+    RepStartTime: str = StartTime[str(StartTime).find(" "):str(StartTime).find(".")]
+    RepStopTime: str = StopTime[str(StopTime).find(" "):str(StopTime).find(".")]
+
+    MOKO.Report("ScriptExecutionTime", "set", "table", str(ScriptName) + ";" +
+                                                       RepStartTime + ";" +
+                                                       RepStopTime + ";" +
+                                                       RepTimeOfCompletion)
+# endregion
